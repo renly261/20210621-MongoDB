@@ -1,37 +1,28 @@
-// 1. 先安裝 express **************************************
 import express from 'express'
 import mongoose from 'mongoose'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import users from './users.js'
 
-mongoose.connect('mongodb+srv://user:77156944@cluster0.fqnsc.mongodb.net/test')
+mongoose.connect('mongodb+srv://tempuser:12341234@cluster0.dkfnq.mongodb.net/test')
 
-// 1. 先安裝 express **************************************
 const app = express()
 
-// 3. server 的設定 **************************************
-// 步驟:1. 有東西進來的話先檢查格式(例如 新增 修改), 沒有的話則不用(例如 查詢)
-// 步驟:2. try{要做的事情} catch(error){針對不同錯誤要做的事情(給不同的回應)}
-
 // 設定前端來的跨域請求
-app.use(
-  cors({
-    // orgin 為請求來源網域，callback 為是否允許
-    origin (origin, callback) {
-      // 允許全部
-      // callback(錯誤訊息, 是否允許)
-      callback(null, true)
-      // 拒絕寫法
-      // callback(new Error('不給你用'), false)
-    }
-  })
-)
+app.use(cors({
+  // orgin 為請求來源網域，callback 為是否允許
+  origin (origin, callback) {
+    // 允許全部
+    callback(null, true)
+    // 拒絕寫法
+    // callback(new Error('不給你用'), false)
+  }
+}))
 
 // 使用 bodyParser 處理 post 的資料
 app.use(bodyParser.json())
 
-// 新增 post-------------------------------------------------------------------------------
+// 新增
 // app.請求方式(路徑, 處理function)
 // req 是進來的請求
 // res 是出去的回應
@@ -41,12 +32,13 @@ app.post('/users', async (req, res) => {
     res.status(400).send({ success: false, message: '格式不符' })
     return
   }
+
   try {
     const result = await users.create(req.body)
     console.log(result)
     res.status(200).send({ success: true, message: '', result })
   } catch (error) {
-    // 如果是驗證錯誤
+    console.log(error)
     if (error.name === 'ValidationError') {
       // 如果是驗證錯誤
       // 因為驗證錯誤是拿資料欄位當 key 值，所以用 Object.keys 取第一個
@@ -63,13 +55,11 @@ app.post('/users', async (req, res) => {
   }
 })
 
-// 查詢 get-------------------------------------------------------------------------------
 app.get('/users', async (req, res) => {
   try {
     const query = {}
 
     if (req.query.age) {
-      // query 抓到的東西都是文字, 要用 parseInt 將文字轉數字
       query.age = parseInt(req.query.age)
     }
 
@@ -82,7 +72,6 @@ app.get('/users', async (req, res) => {
   }
 })
 
-// 修改 patch-------------------------------------------------------------------------------
 app.patch('/users/:id', async (req, res) => {
   // 檢查進來的資料格式對不對
   if (!req.headers['content-type'] || !req.headers['content-type'].includes('application/json')) {
@@ -117,7 +106,6 @@ app.patch('/users/:id', async (req, res) => {
   }
 })
 
-// 刪除 delete-------------------------------------------------------------------------------
 app.delete('/users/:id', async (req, res) => {
   try {
     const result = await users.findByIdAndDelete(req.params.id)
@@ -137,7 +125,6 @@ app.delete('/users/:id', async (req, res) => {
   }
 })
 
-// 2. server 在哪一個 port **************************************
 app.listen(3000, () => {
   console.log('http://localhost:3000')
 })
